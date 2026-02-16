@@ -1,0 +1,261 @@
+{
+    "id": "game_68a86418c0f46",
+    "players": [
+        {
+            "id": "player1",
+            "name": "Player 1",
+            "health": 20,
+            "dnaPoints": 3,
+            "energy": 3,
+            "hand": [
+                {
+                    "id": "spore_001",
+                    "name": "Spore",
+                    "type": "base_creature",
+                    "cost": 1,
+                    "description": "A fungal organism that can adapt to various environments",
+                    "artUrl": null,
+                    "stats": {
+                        "attack": 0,
+                        "health": 2,
+                        "armor": 0
+                    },
+                    "dnaSlots": [
+                        "essence",
+                        "defense",
+                        "mind"
+                    ],
+                    "maxMutations": 2
+                },
+                {
+                    "id": "spikes_001",
+                    "name": "Spikes",
+                    "type": "mutation",
+                    "cost": 2,
+                    "description": "Sharp protrusions that increase attack and provide thorns",
+                    "artUrl": null,
+                    "mutationType": "spikes",
+                    "targetSlot": "attack",
+                    "primaryEffect": {
+                        "statChanges": {
+                            "attack": 2
+                        },
+                        "abilities": [
+                            "thorns"
+                        ]
+                    },
+                    "proceduralModifiers": [
+                        {
+                            "id": "poison_spikes",
+                            "name": "Poison Spikes",
+                            "description": "Chance for spikes to be poisonous",
+                            "effect": {
+                                "poison_chance": 0.3
+                            }
+                        }
+                    ]
+                },
+                {
+                    "id": "grub_001",
+                    "name": "Grub",
+                    "type": "base_creature",
+                    "cost": 1,
+                    "description": "A simple larval creature with great potential for growth",
+                    "artUrl": null,
+                    "stats": {
+                        "attack": 1,
+                        "health": 3,
+                        "armor": 0
+                    },
+                    "dnaSlots": [
+                        "body",
+                        "attack",
+                        "defense"
+                    ],
+                    "maxMutations": 3
+                },
+                {
+                    "id": "spikes_001",
+                    "name": "Spikes",
+                    "type": "mutation",
+                    "cost": 2,
+                    "description": "Sharp protrusions that increase attack and provide thorns",
+                    "artUrl": null,
+                    "mutationType": "spikes",
+                    "targetSlot": "attack",
+                    "primaryEffect": {
+                        "statChanges": {
+                            "attack": 2
+                        },
+                        "abilities": [
+                            "thorns"
+                        ]
+                    },
+                    "proceduralModifiers": [
+                        {
+                            "id": "poison_spikes",
+                            "name": "Poison Spikes",
+                            "description": "Chance for spikes to be poisonous",
+                            "effect": {
+                                "poison_chance": 0.3
+                            }
+                        }
+                    ]
+                },
+                {
+                    "id": "grub_001",
+                    "name": "Grub",
+                    "type": "base_creature",
+                    "cost": 1,
+                    "description": "A simple larval creature with great potential for growth",
+                    "artUrl": null,
+                    "stats": {
+                        "attack": 1,
+                        "health": 3,
+                        "armor": 0
+                    },
+                    "dnaSlots": [
+                        "body",
+                        "attack",
+                        "defense"
+                    ],
+                    "maxMutations": 3
+                }
+            ],
+            "deck": [],
+            "creatures": []
+        },
+        {
+            "id": "player2",
+            "name": "Player 2",
+            "health": 20,
+            "dnaPoints": 3,
+            "energy": 3,
+            "hand": [
+                {
+                    "id": "spore_001",
+                    "name": "Spore",
+                    "type": "base_creature",
+                    "cost": 1,
+                    "description": "A fungal organism that can adapt to various environments",
+                    "artUrl": null,
+                    "stats": {
+                        "attack": 0,
+                        "health": 2,
+                        "armor": 0
+                    },
+                    "dnaSlots": [
+                        "essence",
+                        "defense",
+                        "mind"
+                    ],
+                    "maxMutations": 2
+                },
+                {
+                    "id": "spikes_001",
+                    "name": "Spikes",
+                    "type": "mutation",
+                    "cost": 2,
+                    "description": "Sharp protrusions that increase attack and provide thorns",
+                    "artUrl": null,
+                    "mutationType": "spikes",
+                    "targetSlot": "attack",
+                    "primaryEffect": {
+                        "statChanges": {
+                            "attack": 2
+                        },
+                        "abilities": [
+                            "thorns"
+                        ]
+                    },
+                    "proceduralModifiers": [
+                        {
+                            "id": "poison_spikes",
+                            "name": "Poison Spikes",
+                            "description": "Chance for spikes to be poisonous",
+                            "effect": {
+                                "poison_chance": 0.3
+                            }
+                        }
+                    ]
+                },
+                {
+                    "id": "grub_001",
+                    "name": "Grub",
+                    "type": "base_creature",
+                    "cost": 1,
+                    "description": "A simple larval creature with great potential for growth",
+                    "artUrl": null,
+                    "stats": {
+                        "attack": 1,
+                        "health": 3,
+                        "armor": 0
+                    },
+                    "dnaSlots": [
+                        "body",
+                        "attack",
+                        "defense"
+                    ],
+                    "maxMutations": 3
+                },
+                {
+                    "id": "carapace_001",
+                    "name": "Carapace",
+                    "type": "mutation",
+                    "cost": 3,
+                    "description": "Hardened shell that provides armor and durability",
+                    "artUrl": null,
+                    "mutationType": "carapace",
+                    "targetSlot": "defense",
+                    "primaryEffect": {
+                        "statChanges": {
+                            "armor": 3,
+                            "health": 1
+                        },
+                        "abilities": [
+                            "armored"
+                        ]
+                    },
+                    "proceduralModifiers": [
+                        {
+                            "id": "reinforced_armor",
+                            "name": "Reinforced Armor",
+                            "description": "Extra durability against physical attacks",
+                            "effect": {
+                                "physical_resistance": 0.2
+                            }
+                        }
+                    ]
+                },
+                {
+                    "id": "grub_001",
+                    "name": "Grub",
+                    "type": "base_creature",
+                    "cost": 1,
+                    "description": "A simple larval creature with great potential for growth",
+                    "artUrl": null,
+                    "stats": {
+                        "attack": 1,
+                        "health": 3,
+                        "armor": 0
+                    },
+                    "dnaSlots": [
+                        "body",
+                        "attack",
+                        "defense"
+                    ],
+                    "maxMutations": 3
+                }
+            ],
+            "deck": [],
+            "creatures": []
+        }
+    ],
+    "currentPlayerIndex": 0,
+    "turn": 1,
+    "phase": "main",
+    "battlefield": {
+        "environment": null,
+        "effects": []
+    }
+}

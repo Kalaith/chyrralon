@@ -1,0 +1,152 @@
+.creature-instance {
+  width: 160px;
+  min-height: 200px;
+  border: 2px solid #4caf50;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #1a2a1a 0%, #2d3d2d 100%);
+  color: white;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.3);
+  position: relative;
+}
+
+.creature-instance:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(76, 175, 80, 0.4);
+}
+
+.creature-instance.selected {
+  border-color: #ffd700;
+  transform: scale(1.05);
+  box-shadow: 0 8px 16px rgba(255, 215, 0, 0.5);
+}
+
+.creature-art-stack {
+  position: relative;
+  height: 80px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.base-art {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+}
+
+.base-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.placeholder-art {
+  width: 100%;
+  height: 100%;
+  background: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.mutation-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: bold;
+  opacity: 0.7;
+  mix-blend-mode: overlay;
+}
+
+.mutation-layer.spikes {
+  background: linear-gradient(45deg, transparent 30%, #ff4444 50%, transparent 70%);
+}
+
+.mutation-layer.carapace {
+  background: radial-gradient(circle, transparent 30%, #8b4513 60%, transparent 80%);
+}
+
+.mutation-layer.wings {
+  background: linear-gradient(90deg, transparent 20%, #87ceeb 50%, transparent 80%);
+}
+
+.creature-info {
+  margin-bottom: 8px;
+}
+
+.creature-name {
+  font-size: 12px;
+  font-weight: bold;
+  margin: 0 0 4px 0;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.creature-stats {
+  display: flex;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: bold;
+}
+
+.stat {
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: #333;
+}
+
+.stat.attack {
+  color: #ff6b6b;
+}
+
+.stat.health {
+  color: #4caf50;
+}
+
+.stat.armor {
+  color: #9e9e9e;
+}
+
+.mutations-list {
+  margin-bottom: 4px;
+}
+
+.mutation-tag {
+  display: inline-block;
+  background: #ff9800;
+  color: white;
+  font-size: 8px;
+  padding: 1px 4px;
+  border-radius: 2px;
+  margin: 1px;
+}
+
+.abilities-list {
+  margin-bottom: 4px;
+}
+
+.ability-tag {
+  display: inline-block;
+  background: #2196f3;
+  color: white;
+  font-size: 8px;
+  padding: 1px 4px;
+  border-radius: 2px;
+  margin: 1px;
+}

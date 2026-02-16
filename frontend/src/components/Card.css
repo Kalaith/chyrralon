@@ -1,0 +1,127 @@
+.card {
+  width: 200px;
+  height: 280px;
+  border: 2px solid #666;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  color: white;
+  padding: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+}
+
+.card.playable {
+  border-color: #4caf50;
+  box-shadow: 0 4px 8px rgba(76, 175, 80, 0.4);
+}
+
+.card.selected {
+  border-color: #ffd700;
+  transform: scale(1.05);
+  box-shadow: 0 8px 16px rgba(255, 215, 0, 0.5);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.card-name {
+  font-size: 14px;
+  font-weight: bold;
+  margin: 0;
+  flex: 1;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.card-cost {
+  background: #333;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: bold;
+  margin-left: 8px;
+}
+
+.card-art {
+  flex: 1;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+  min-height: 80px;
+}
+
+.card-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.placeholder-art {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  color: white;
+  text-align: center;
+  opacity: 0.7;
+}
+
+.card-description {
+  font-size: 10px;
+  line-height: 1.3;
+  margin-bottom: 8px;
+  flex-shrink: 0;
+  max-height: 40px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card-stats {
+  font-size: 11px;
+}
+
+.stat-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.dna-slots {
+  font-size: 9px;
+  color: #aaa;
+  text-transform: uppercase;
+}
+
+.mutation-info {
+  font-size: 11px;
+}
+
+.target-slot {
+  margin-bottom: 4px;
+  color: #aaa;
+}
+
+.primary-effect span {
+  margin-right: 8px;
+  color: #4caf50;
+}
