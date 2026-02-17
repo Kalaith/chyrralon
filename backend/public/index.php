@@ -2,7 +2,30 @@
 
 declare(strict_types=1);
 
-require __DIR__ . '/../vendor/autoload.php';
+$autoloadCandidates = [
+    __DIR__ . '/../vendor/autoload.php',
+    __DIR__ . '/../../vendor/autoload.php',
+    __DIR__ . '/../../../vendor/autoload.php',
+    __DIR__ . '/../../../../vendor/autoload.php',
+];
+
+$autoloadPath = null;
+foreach ($autoloadCandidates as $candidate) {
+    if (file_exists($candidate)) {
+        $autoloadPath = $candidate;
+        break;
+    }
+}
+
+if ($autoloadPath === null) {
+    throw new RuntimeException('Composer autoload.php not found from ' . __DIR__);
+}
+
+$loader = require $autoloadPath;
+$projectSrc = realpath(__DIR__ . '/../src');
+if ($projectSrc !== false && $loader instanceof \Composer\Autoload\ClassLoader) {
+    $loader->addPsr4('Chyrralon\\', $projectSrc . DIRECTORY_SEPARATOR, true);
+}
 
 // Load environment variables from .env file if it exists
 $envFile = __DIR__ . '/../.env';

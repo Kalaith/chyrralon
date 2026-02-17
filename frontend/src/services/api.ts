@@ -1,7 +1,13 @@
 import { GameCard } from '../types/cards';
 import { GameState } from '../types/game';
 
-const apiBase = 'http://localhost:8000/api';
+const configuredApiBase = import.meta.env.VITE_API_URL as string | undefined;
+
+if (!configuredApiBase || configuredApiBase.trim().length === 0) {
+  throw new Error('VITE_API_URL is required');
+}
+
+const apiBase = configuredApiBase.replace(/\/$/, '');
 
 interface ApiErrorBody {
   error?: string;

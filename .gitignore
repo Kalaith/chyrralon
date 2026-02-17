@@ -43,3 +43,6 @@ Thumbs.db
 yarn-debug.log*
 yarn-error.log*
 dist/
+backend/.env.preview
+frontend/.env.example
+frontend/.env.preview
