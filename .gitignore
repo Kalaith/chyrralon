@@ -1,1 +1,45 @@
+
+# Coverage directory used by tools like istanbul
+# Dependencies
+# Environment variables
+# IDE files
+# Logs
+# OS generated files
+# Package-lock files (uncomment if you want to include them)
+# package-lock.json
+# Production builds
+# Runtime data
+# yarn.lock
+*.lcov
+*.pid
+*.pid.lock
+*.seed
+*.swo
+*.swp
+._*
+.DS_Store
+.DS_Store?
 .env
+.env.development.local
+.env.local
+.env.production.local
+.env.test.local
+.idea/
+.pnp.js
+.Spotlight-V100
+.Trashes
+.vscode/
+/.pnp
+/build
+/dist
+coverage/
+ehthumbs.db
+lerna-debug.log*
+mcp
+node_modules/
+npm-debug.log*
+pids
+Thumbs.db
+yarn-debug.log*
+yarn-error.log*
+dist/
