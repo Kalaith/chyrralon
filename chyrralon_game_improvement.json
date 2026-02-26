@@ -1,0 +1,262 @@
+{
+    "metadata":  {
+                     "name":  "chyrralon_game_improvement",
+                     "version":  "1.0.0",
+                     "generated_at":  "2026-02-22",
+                     "framework":  "WebHatchery Quest Board Planning Guide"
+                 },
+    "habitat":  {
+                    "slug":  "chyrralon",
+                    "project_path":  "game_apps/chyrralon/frontend/",
+                    "project_title":  "Chyrralon"
+                },
+    "season":  {
+                   "name":  "Season 1: Living World Pass",
+                   "slug":  "season-1",
+                   "starts_at":  "2026-02-24",
+                   "ends_at":  "2026-04-03",
+                   "is_active":  true,
+                   "path_chosen":  "feature-depth"
+               },
+    "outcome_brief":  {
+                          "statement":  "The world feels alive and meaningfully different between play sessions.",
+                          "deadline":  "2026-04-03"
+                      },
+    "major_update":  {
+                         "slug":  "dynamic-world-events",
+                         "name":  "Major Update: Dynamic World Events",
+                         "description":  "Add region-based event cycles that alter encounter pools, rewards, and travel risk.",
+                         "outcome_statement":  "The world feels alive and meaningfully different between play sessions.",
+                         "deadline":  "2026-04-03"
+                     },
+    "quest_chains":  [
+                         {
+                             "slug":  "chyrralon-world-events-support",
+                             "name":  "Chyrralon: Dynamic World Events Support",
+                             "description":  "Deliver event runtime systems, world-state UI, and stability tests for dynamic regions.",
+                             "labels":  [
+                                            "type:quest",
+                                            "chain:feature-depth"
+                                        ],
+                             "reward_xp":  180,
+                             "reward_badge_slug":  "storm-cartographer",
+                             "reward_title":  "Storm Cartographer",
+                             "is_active":  true,
+                             "steps":  [
+                                           {
+                                               "id":  "CHY-Q1",
+                                               "type":  "Quest",
+                                               "title":  "Build Regional Event Runtime",
+                                               "description":  "Create server-driven region event states with predictable rotation rules.",
+                                               "rank_required":  "Iron",
+                                               "quest_level":  4,
+                                               "dependency_type":  "Independent",
+                                               "depends_on":  [
+
+                                                              ],
+                                               "unlock_condition":  "n/a",
+                                               "goal":  "Event state changes are reliable and schedule-driven.",
+                                               "player_steps":  [
+                                                                    "Define event-state schema and rotation cadence.",
+                                                                    "Implement runtime resolver per region.",
+                                                                    "Add fallback behavior for missing event payloads."
+                                                                ],
+                                               "done_when":  [
+                                                                 "All target regions resolve active event state.",
+                                                                 "Rotation runs without manual intervention.",
+                                                                 "Fallback path prevents null-state crashes."
+                                                             ],
+                                               "due_date":  "2026-03-08",
+                                               "proof_required":  [
+                                                                      "proof:pr",
+                                                                      "proof:test-output",
+                                                                      "proof:metric-delta"
+                                                                  ],
+                                               "class_fantasy":  "Aether Smith",
+                                               "class":  "feature-smith",
+                                               "difficulty":  4,
+                                               "xp":  80,
+                                               "labels":  [
+                                                              "type:quest",
+                                                              "difficulty:4",
+                                                              "class:feature-smith",
+                                                              "xp:80",
+                                                              "chain:feature-depth"
+                                                          ]
+                                           },
+                                           {
+                                               "id":  "CHY-Q2",
+                                               "type":  "Quest",
+                                               "title":  "Expose World-State Map Layers",
+                                               "description":  "Render active regional events and risk overlays on the world map.",
+                                               "rank_required":  "Iron",
+                                               "quest_level":  3,
+                                               "dependency_type":  "Chained",
+                                               "depends_on":  [
+                                                                  "CHY-Q1"
+                                                              ],
+                                               "unlock_condition":  "CHY-Q1 complete.",
+                                               "goal":  "Players can plan routes based on live world conditions.",
+                                               "player_steps":  [
+                                                                    "Design event and risk map layer legends.",
+                                                                    "Implement layer toggles and map markers.",
+                                                                    "Add mobile-friendly map interaction behavior."
+                                                                ],
+                                               "done_when":  [
+                                                                 "Map shows current event and risk layers.",
+                                                                 "Layer toggles are responsive on desktop and mobile.",
+                                                                 "Legend content matches live event definitions."
+                                                             ],
+                                               "due_date":  "2026-03-18",
+                                               "proof_required":  [
+                                                                      "proof:pr",
+                                                                      "proof:test-output",
+                                                                      "proof:screenshot"
+                                                                  ],
+                                               "class_fantasy":  "Cogwheel Alchemist",
+                                               "class":  "ux-alchemist",
+                                               "difficulty":  3,
+                                               "xp":  60,
+                                               "labels":  [
+                                                              "type:quest",
+                                                              "difficulty:3",
+                                                              "class:ux-alchemist",
+                                                              "xp:60",
+                                                              "chain:feature-depth"
+                                                          ]
+                                           },
+                                           {
+                                               "id":  "CHY-Q3",
+                                               "type":  "Quest",
+                                               "title":  "Run Event Stability and Regression Suite",
+                                               "description":  "Validate event transitions, reward pools, and route-risk recalculations.",
+                                               "rank_required":  "Iron",
+                                               "quest_level":  3,
+                                               "dependency_type":  "Chained",
+                                               "depends_on":  [
+                                                                  "CHY-Q1",
+                                                                  "CHY-Q2"
+                                                              ],
+                                               "unlock_condition":  "CHY-Q1 and CHY-Q2 complete.",
+                                               "goal":  "Ensure dynamic events do not regress core world traversal.",
+                                               "player_steps":  [
+                                                                    "Author transition tests for at least 10 event cycles.",
+                                                                    "Add reward integrity checks per region.",
+                                                                    "Gate merge on the dynamic event suite in CI."
+                                                                ],
+                                               "done_when":  [
+                                                                 "Dynamic event suite passes in CI.",
+                                                                 "No duplicate or missing reward pool entries remain.",
+                                                                 "Traversal regressions are below accepted threshold."
+                                                             ],
+                                               "due_date":  "2026-03-29",
+                                               "proof_required":  [
+                                                                      "proof:pr",
+                                                                      "proof:test-output",
+                                                                      "proof:metric-delta"
+                                                                  ],
+                                               "class_fantasy":  "Arcane Examiner",
+                                               "class":  "test-summoner",
+                                               "difficulty":  3,
+                                               "xp":  60,
+                                               "labels":  [
+                                                              "type:quest",
+                                                              "difficulty:3",
+                                                              "class:test-summoner",
+                                                              "xp:60",
+                                                              "chain:feature-depth"
+                                                          ]
+                                           },
+                                           {
+                                               "id":  "CHY-Q4",
+                                               "type":  "Quest",
+                                               "title":  "Add Event Reward Narrative Hooks",
+                                               "description":  "Attach lightweight story snippets and region flavor text to active world events.",
+                                               "rank_required":  "Iron",
+                                               "quest_level":  2,
+                                               "dependency_type":  "Chained",
+                                               "depends_on":  [
+                                                                  "CHY-Q2"
+                                                              ],
+                                               "unlock_condition":  "CHY-Q2 complete.",
+                                               "goal":  "Event participation feels contextual, not purely mechanical.",
+                                               "player_steps":  [
+                                                                    "Create narrative hook schema per event archetype.",
+                                                                    "Implement UI surfaces for snippets in map and encounter panels.",
+                                                                    "Add localization-ready content keys."
+                                                                ],
+                                               "done_when":  [
+                                                                 "Active events display narrative hooks in all target surfaces.",
+                                                                 "Content keys are localization-compatible.",
+                                                                 "Narrative hooks do not block gameplay if missing."
+                                                             ],
+                                               "due_date":  "2026-03-25",
+                                               "proof_required":  [
+                                                                      "proof:pr",
+                                                                      "proof:test-output",
+                                                                      "proof:screenshot"
+                                                                  ],
+                                               "class_fantasy":  "Rune Scribe",
+                                               "class":  "doc-sage",
+                                               "difficulty":  2,
+                                               "xp":  40,
+                                               "labels":  [
+                                                              "type:quest",
+                                                              "difficulty:2",
+                                                              "class:doc-sage",
+                                                              "xp:40",
+                                                              "chain:feature-depth"
+                                                          ]
+                                           },
+                                           {
+                                               "id":  "CHY-Q5",
+                                               "type":  "Quest",
+                                               "title":  "Harden Event Failover and Rollback",
+                                               "description":  "Implement safe rollback to prior event state when a bad region payload is detected.",
+                                               "rank_required":  "Iron",
+                                               "quest_level":  4,
+                                               "dependency_type":  "Chained",
+                                               "depends_on":  [
+                                                                  "CHY-Q3",
+                                                                  "CHY-Q4"
+                                                              ],
+                                               "unlock_condition":  "CHY-Q3 and CHY-Q4 complete.",
+                                               "goal":  "Dynamic events remain stable during bad deploys or malformed payloads.",
+                                               "player_steps":  [
+                                                                    "Add region-level rollback triggers and state snapshots.",
+                                                                    "Implement health checks and auto-failover conditions.",
+                                                                    "Run chaos tests for malformed event payloads."
+                                                                ],
+                                               "done_when":  [
+                                                                 "Rollback restores previous event state within target window.",
+                                                                 "Malformed payloads do not crash traversal flow.",
+                                                                 "Chaos test report is attached."
+                                                             ],
+                                               "due_date":  "2026-04-02",
+                                               "proof_required":  [
+                                                                      "proof:pr",
+                                                                      "proof:test-output",
+                                                                      "proof:metric-delta"
+                                                                  ],
+                                               "class_fantasy":  "Iron Warden",
+                                               "class":  "ops-ranger",
+                                               "difficulty":  4,
+                                               "xp":  80,
+                                               "labels":  [
+                                                              "type:quest",
+                                                              "difficulty:4",
+                                                              "class:ops-ranger",
+                                                              "xp:80",
+                                                              "chain:feature-depth"
+                                                          ]
+                                           }
+                                       ]
+                         }
+                     ]
+,
+  "bosses": [],
+  "raids": []
+}
+
+
+
