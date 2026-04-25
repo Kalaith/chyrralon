@@ -1,5 +1,6 @@
 import { GameCard } from '../types/cards';
 import { GameState } from '../types/game';
+import { AuthUser, getActiveAuthToken } from '../stores/authStore';
 
 const configuredApiBase = import.meta.env.VITE_API_URL as string | undefined;
 
@@ -23,23 +24,76 @@ const getErrorMessage = (payload: unknown, fallback: string): string => {
   return fallback;
 };
 
-const getAuthToken = (): string | null => {
-  try {
-    const raw = localStorage.getItem('auth-storage');
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as { state?: { token?: string | null } };
-    return parsed.state?.token ?? null;
-  } catch {
-    return null;
-  }
-};
-
 const withAuth = (headers: Record<string, string> = {}) => {
-  const token = getAuthToken();
+  const token = getActiveAuthToken();
   return token ? { ...headers, Authorization: `Bearer ${token}` } : headers;
 };
 
+interface SessionResponse {
+  success: boolean;
+  data?: {
+    user?: AuthUser;
+    token?: string;
+    linked?: boolean;
+    guest_user_id?: string;
+  };
+  error?: string;
+  login_url?: string;
+}
+
 export class GameAPI {
+  static async getSession(token?: string): Promise<AuthUser> {
+    const response = await fetch(`${apiBase}/auth/session`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : withAuth(),
+    });
+    const data = (await response.json()) as SessionResponse;
+
+    if (!response.ok || !data.data?.user) {
+      throw new Error(getErrorMessage(data, 'Failed to load session'));
+    }
+
+    return data.data.user;
+  }
+
+  static async createGuestSession(): Promise<{ user: AuthUser; token: string }> {
+    const response = await fetch(`${apiBase}/auth/guest-session`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    const data = (await response.json()) as SessionResponse;
+
+    if (!response.ok || !data.data?.user || !data.data?.token) {
+      throw new Error(getErrorMessage(data, 'Failed to create guest session'));
+    }
+
+    return {
+      user: data.data.user,
+      token: data.data.token,
+    };
+  }
+
+  static async linkGuestAccount(guestUserId: string, token: string): Promise<AuthUser> {
+    const response = await fetch(`${apiBase}/auth/link-guest`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        guest_user_id: guestUserId,
+      }),
+    });
+    const data = (await response.json()) as SessionResponse;
+
+    if (!response.ok || !data.data?.user) {
+      throw new Error(getErrorMessage(data, 'Failed to link guest account'));
+    }
+
+    return data.data.user;
+  }
+
   static async createGame(): Promise<GameState> {
     const response = await fetch(`${apiBase}/game/create`, {
       method: 'POST',

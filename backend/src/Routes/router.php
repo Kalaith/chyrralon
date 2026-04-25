@@ -10,8 +10,10 @@ use Chyrralon\Middleware\WebHatcheryJwtMiddleware;
 return function (Router $router): void {
     $api = '/api';
 
-    // Auth session
+    // Auth endpoints
     $router->get($api . '/auth/session', [AuthController::class, 'session'], [WebHatcheryJwtMiddleware::class]);
+    $router->post($api . '/auth/guest-session', [AuthController::class, 'guestSession']);
+    $router->post($api . '/auth/link-guest', [AuthController::class, 'linkGuest'], [WebHatcheryJwtMiddleware::class]);
 
     // Public endpoints
     $router->get($api . '/health', [HealthController::class, 'health']);

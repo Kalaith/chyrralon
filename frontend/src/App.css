@@ -1,38 +1,109 @@
+.app-shell {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(113, 193, 143, 0.18), transparent 35%),
+    linear-gradient(180deg, #0d1816 0%, #13211d 55%, #1d2c24 100%);
+  color: #edf6ef;
+}
+
 .App {
   text-align: center;
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+.app-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+.app-title {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 700;
 }
 
-.App-header {
-  background-color: #282c34;
+.app-status {
+  display: block;
+  margin-top: 0.2rem;
+  color: rgba(237, 246, 239, 0.74);
+  font-size: 0.95rem;
+}
+
+.auth-panel {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  gap: 1rem;
+  padding: 2rem;
+  max-width: 34rem;
+  margin: 0 auto;
+  text-align: center;
 }
 
-.App-link {
-  color: #61dafb;
+.auth-panel h1 {
+  margin: 0;
+  font-size: clamp(2rem, 6vw, 3.5rem);
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
+.auth-panel p {
+  margin: 0;
+  color: rgba(237, 246, 239, 0.82);
+}
+
+.auth-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.primary-action,
+.secondary-action {
+  border-radius: 999px;
+  padding: 0.85rem 1.2rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.primary-action {
+  border: none;
+  background: #9de57b;
+  color: #0d1816;
+  cursor: pointer;
+}
+
+.primary-action:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.secondary-action {
+  border: 1px solid rgba(237, 246, 239, 0.28);
+  color: #edf6ef;
+  background: rgba(237, 246, 239, 0.06);
+}
+
+.auth-error {
+  color: #ffb3b3;
+}
+
+@media (max-width: 640px) {
+  .app-topbar {
+    flex-direction: column;
+    align-items: flex-start;
   }
-  to {
-    transform: rotate(360deg);
+
+  .auth-actions {
+    width: 100%;
+  }
+
+  .primary-action,
+  .secondary-action {
+    width: 100%;
   }
 }
