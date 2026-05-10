@@ -20,16 +20,18 @@ export interface StoredGuestSession {
 }
 
 export const WEBHATCHERY_AUTH_STORAGE_KEY = 'auth-storage';
-export const GUEST_AUTH_STORAGE_KEY = 'chyrralon-guest-session';
 
 export interface AuthState {
     user: AuthUser | null;
     token: string | null;
     authMode: AuthMode | null;
     loginUrl: string | null;
+    guestSession: StoredGuestSession | null;
     setLoginUrl: (url: string | null) => void;
     login: (user: AuthUser, token: string, authMode?: AuthMode) => void;
     logout: () => void;
+    setGuestSession: (session: StoredGuestSession) => void;
+    clearGuestSession: () => void;
 }
 
 export const getFrontpageToken = (): string | null => {
@@ -39,7 +41,11 @@ export const getFrontpageToken = (): string | null => {
             return null;
         }
 
-        const parsed = JSON.parse(raw) as { state?: { token?: string | null } };
+        const parsed = JSON.parse(raw) as { state?: { token?: string | null; user?: { is_guest?: boolean } | null } };
+        if (parsed.state?.user?.is_guest) {
+            return null;
+        }
+
         return parsed.state?.token ?? null;
     } catch {
         return null;
@@ -47,33 +53,29 @@ export const getFrontpageToken = (): string | null => {
 };
 
 export const getStoredGuestSession = (): StoredGuestSession | null => {
-    try {
-        const raw = localStorage.getItem(GUEST_AUTH_STORAGE_KEY);
-        if (!raw) {
-            return null;
-        }
-
-        return JSON.parse(raw) as StoredGuestSession;
-    } catch {
-        return null;
-    }
+    return useAuthStore.getState().guestSession;
 };
 
 export const saveGuestSession = (session: StoredGuestSession): void => {
-    localStorage.setItem(GUEST_AUTH_STORAGE_KEY, JSON.stringify(session));
+    useAuthStore.getState().setGuestSession(session);
 };
 
 export const clearGuestSession = (): void => {
-    localStorage.removeItem(GUEST_AUTH_STORAGE_KEY);
+    useAuthStore.getState().clearGuestSession();
 };
 
 export const getActiveAuthToken = (): string | null => {
+    const frontpageToken = getFrontpageToken();
+    if (frontpageToken) {
+        return frontpageToken;
+    }
+
     const guestSession = getStoredGuestSession();
     if (guestSession?.token) {
         return guestSession.token;
     }
 
-    return getFrontpageToken();
+    return null;
 };
 
 export const useAuthStore = create<AuthState>()(
@@ -83,12 +85,21 @@ export const useAuthStore = create<AuthState>()(
             token: null,
             authMode: null,
             loginUrl: null,
+            guestSession: null,
             setLoginUrl: (url) => set({ loginUrl: url }),
-            login: (user, token, authMode = 'frontpage') => set({ user, token, authMode, loginUrl: null }),
+            login: (user, token, authMode = 'frontpage') =>
+                set({
+                    user,
+                    token,
+                    authMode,
+                    loginUrl: null,
+                    guestSession: authMode === 'guest' ? { token, user } : null,
+                }),
             logout: () => {
-                set({ user: null, token: null, authMode: null });
-                clearGuestSession();
+                set({ user: null, token: null, authMode: null, guestSession: null });
             },
+            setGuestSession: (session) => set({ guestSession: session }),
+            clearGuestSession: () => set({ guestSession: null }),
         }),
         { name: 'chyrralon-auth-store' }
     )

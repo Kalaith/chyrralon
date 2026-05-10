@@ -64,6 +64,11 @@ final class Router
         $uri = $_SERVER['REQUEST_URI'] ?? '/';
         $path = explode('?', $uri)[0];
 
+        if ($method === 'OPTIONS') {
+            $this->emit($this->withCors((new Response())->withStatus(204)));
+            return;
+        }
+
         if (!empty($this->basePath) && strpos($path, $this->basePath) === 0) {
             $path = substr($path, strlen($this->basePath));
         }
@@ -198,10 +203,32 @@ final class Router
 
     private function withCors(Response $response): Response
     {
+        $allowedOrigin = $this->resolveAllowedOrigin();
+
         return $response
-            ->withHeader('Access-Control-Allow-Origin', '*')
+            ->withHeader('Access-Control-Allow-Origin', $allowedOrigin)
             ->withHeader('Access-Control-Allow-Headers', 'Content-Type, Accept, Origin, Authorization')
-            ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+            ->withHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
+            ->withHeader('Vary', 'Origin');
+    }
+
+    private function resolveAllowedOrigin(): string
+    {
+        $origins = array_values(array_filter(
+            array_map('trim', explode(',', Environment::required('CORS_ALLOWED_ORIGINS'))),
+            static fn(string $origin): bool => $origin !== ''
+        ));
+
+        if ($origins === []) {
+            throw new \RuntimeException('CORS_ALLOWED_ORIGINS must contain at least one origin.');
+        }
+
+        $requestOrigin = $_SERVER['HTTP_ORIGIN'] ?? '';
+        if (is_string($requestOrigin) && in_array($requestOrigin, $origins, true)) {
+            return $requestOrigin;
+        }
+
+        return $origins[0];
     }
 
     private function emit(Response $response): void

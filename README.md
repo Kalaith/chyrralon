@@ -36,6 +36,14 @@ chyrralon/
 
 ## Running the Project
 
+For normal WebHatchery preview verification, run the app-local publish script from this folder:
+
+```powershell
+.\publish.ps1
+```
+
+The published preview is served at `http://127.0.0.1/chyrralon/`.
+
 ### Backend (PHP)
 
 1. Navigate to the backend directory:
@@ -48,9 +56,18 @@ chyrralon/
    composer install
    ```
 
-3. Start the PHP development server:
+3. Copy `backend/.env.example` to `backend/.env` and set the required database, JWT, CORS, and login URL values. No backend environment variable has a code fallback.
+
+4. Apply the ordered SQL migrations:
    ```bash
-   php -S localhost:8000 -t public
+   composer migrate
+   ```
+
+   The migration files live under `backend/database/` and are written to be repeatable where practical.
+
+5. Start the PHP development server only for isolated backend work:
+   ```bash
+   composer start
    ```
 
 The API will be available at `http://localhost:8000`
@@ -67,18 +84,28 @@ The API will be available at `http://localhost:8000`
    npm install
    ```
 
-3. Start the development server:
+3. Start the development server only for isolated frontend work:
    ```bash
-   npm start
+   npm run dev
    ```
 
-The application will open at `http://localhost:3000`
+The normal local preview should still be verified through `http://127.0.0.1/chyrralon/` after `.\publish.ps1`.
 
 ## API Endpoints
 
 - `GET /api/health` - Health check
 - `GET /api/cards` - Get all available cards
-- `POST /api/game/create` - Create new game session
+- `GET /api/auth/login-info` - Get the shared WebHatchery login URL
+- `GET /api/auth/session` - Validate the active bearer token
+- `POST /api/auth/guest-session` - Create a guest bearer token
+- `POST /api/auth/link-guest` - Merge guest saves into the authenticated WebHatchery account
+- `POST /api/game/create` - Create a new owner-scoped game session
+- `GET /api/game/{gameId}` - Load one of the authenticated player's games
+- `POST /api/game/{gameId}/phase` - Advance an owned game phase
+- `POST /api/game/{gameId}/summon` - Summon a creature in an owned game
+- `POST /api/game/{gameId}/mutate` - Apply a mutation in an owned game
+
+All game endpoints require `Authorization: Bearer <token>`. Unauthorized responses return a 401 JSON payload with `login_url`.
 
 ## Sample Cards
 

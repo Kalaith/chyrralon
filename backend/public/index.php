@@ -35,12 +35,26 @@ if (file_exists($envFile)) {
         if (strpos($line, '#') === 0 || strpos($line, '=') === false) {
             continue;
         }
-        list($key, $value) = explode('=', $line, 2);
-        $_ENV[trim($key)] = trim($value);
+        [$key, $value] = explode('=', $line, 2);
+        $_ENV[trim($key)] = trim(trim($value), "\"'");
     }
 }
 
 use Chyrralon\Core\Router;
+use Chyrralon\Core\Environment;
+
+foreach ([
+    'DB_HOST',
+    'DB_PORT',
+    'DB_NAME',
+    'DB_USER',
+    'DB_PASSWORD',
+    'JWT_SECRET',
+    'WEB_HATCHERY_LOGIN_URL',
+    'CORS_ALLOWED_ORIGINS',
+] as $requiredEnv) {
+    Environment::required($requiredEnv);
+}
 
 $router = new Router();
 
@@ -63,15 +77,6 @@ if (isset($_ENV['APP_BASE_PATH']) && $_ENV['APP_BASE_PATH']) {
             $router->setBasePath($basePath);
         }
     }
-}
-
-// Handle CORS preflight
-if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
-    header('Access-Control-Allow-Origin: *');
-    header('Access-Control-Allow-Headers: Content-Type, Accept, Origin, Authorization');
-    header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-    http_response_code(200);
-    exit;
 }
 
 // Load routes

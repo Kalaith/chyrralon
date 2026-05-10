@@ -1,56 +1,59 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Chyrralon\Controllers;
 
+use Chyrralon\Core\Database;
+use Chyrralon\Core\Environment;
 use Chyrralon\Http\Response;
 use Chyrralon\Http\Request;
+use Chyrralon\Models\AuthUser;
+use Chyrralon\Repositories\GameRepository;
 use Firebase\JWT\JWT;
+use Firebase\JWT\Key;
 
 class AuthController
 {
+    public static function loginInfo(Request $request, Response $response): Response
+    {
+        return self::json($response, [
+            'success' => true,
+            'data' => [
+                'login_url' => Environment::required('WEB_HATCHERY_LOGIN_URL'),
+            ],
+        ]);
+    }
+
     public static function session(Request $request, Response $response): Response
     {
         $authUser = $request->getAttribute('auth_user');
-        if (!$authUser || empty($authUser['id'])) {
-            $response->getBody()->write(json_encode([
+        if (!$authUser instanceof AuthUser) {
+            return self::json($response, [
                 'success' => false,
                 'error' => 'Authentication required',
                 'message' => 'Unauthorized',
-                'login_url' => $_ENV['LOGIN_URL'] ?? ''
-            ]));
-            return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
+                'login_url' => Environment::required('WEB_HATCHERY_LOGIN_URL'),
+            ], 401);
         }
 
-        $payload = [
+        self::repository()->upsertPlayer($authUser);
+
+        return self::json($response, [
             'success' => true,
             'data' => [
-                'user' => self::serializeUser($authUser),
+                'user' => $authUser->toArray(),
             ]
-        ];
-
-        $response->getBody()->write(json_encode($payload));
-        return $response->withHeader('Content-Type', 'application/json');
+        ]);
     }
 
     public static function guestSession(Request $request, Response $response): Response
     {
-        $secret = $_ENV['JWT_SECRET']
-            ?? $_SERVER['JWT_SECRET']
-            ?? getenv('JWT_SECRET')
-            ?: '';
-
-        if ($secret === '') {
-            $response->getBody()->write(json_encode([
-                'success' => false,
-                'error' => 'JWT secret not configured',
-            ]));
-            return $response->withStatus(500)->withHeader('Content-Type', 'application/json');
-        }
-
+        $secret = Environment::required('JWT_SECRET');
         $issuedAt = time();
         $guestUserId = 'guest_' . bin2hex(random_bytes(16));
         $guestName = 'Guest ' . strtoupper(substr(bin2hex(random_bytes(3)), 0, 6));
-        $token = JWT::encode([
+        $claims = [
             'sub' => $guestUserId,
             'user_id' => $guestUserId,
             'username' => $guestName,
@@ -61,73 +64,97 @@ class AuthController
             'is_guest' => true,
             'iat' => $issuedAt,
             'exp' => $issuedAt + (60 * 60 * 24 * 30),
-        ], $secret, 'HS256');
+        ];
+        $token = JWT::encode($claims, $secret, 'HS256');
+        $guestUser = AuthUser::fromArray($claims);
+        self::repository()->upsertPlayer($guestUser);
 
-        $response->getBody()->write(json_encode([
+        return self::json($response, [
             'success' => true,
             'data' => [
                 'token' => $token,
-                'user' => self::serializeUser([
-                    'id' => $guestUserId,
-                    'username' => $guestName,
-                    'display_name' => $guestName,
-                    'role' => 'guest',
-                    'roles' => ['guest'],
-                    'auth_type' => 'guest',
-                    'is_guest' => true,
-                ]),
+                'user' => $guestUser->toArray(),
             ],
-        ]));
-
-        return $response->withHeader('Content-Type', 'application/json');
+        ]);
     }
 
     public static function linkGuest(Request $request, Response $response): Response
     {
         $authUser = $request->getAttribute('auth_user');
-        if (!$authUser || empty($authUser['id'])) {
-            $response->getBody()->write(json_encode([
+        if (!$authUser instanceof AuthUser) {
+            return self::json($response, [
                 'success' => false,
                 'error' => 'Authentication required',
                 'message' => 'Unauthorized',
-                'login_url' => $_ENV['LOGIN_URL'] ?? '',
-            ]));
-            return $response->withStatus(401)->withHeader('Content-Type', 'application/json');
+                'login_url' => Environment::required('WEB_HATCHERY_LOGIN_URL'),
+            ], 401);
+        }
+
+        if ($authUser->isGuest) {
+            return self::json($response, [
+                'success' => false,
+                'error' => 'Linking requires a signed-in non-guest account',
+            ], 400);
         }
 
         $body = $request->getParsedBody();
-        $guestUserId = is_array($body) ? ($body['guest_user_id'] ?? null) : null;
-        if (!is_string($guestUserId) || strpos($guestUserId, 'guest_') !== 0) {
-            $response->getBody()->write(json_encode([
+        $guestToken = $body['guest_token'] ?? null;
+        if (!is_string($guestToken) || trim($guestToken) === '') {
+            return self::json($response, [
                 'success' => false,
-                'error' => 'Invalid guest user identifier',
-            ]));
-            return $response->withStatus(422)->withHeader('Content-Type', 'application/json');
+                'error' => 'Invalid guest token',
+            ], 422);
         }
 
-        $response->getBody()->write(json_encode([
+        try {
+            $decodedGuest = JWT::decode($guestToken, new Key(Environment::required('JWT_SECRET'), 'HS256'));
+        } catch (\Throwable) {
+            return self::json($response, [
+                'success' => false,
+                'error' => 'Invalid guest token',
+            ], 422);
+        }
+
+        $guestClaims = (array) $decodedGuest;
+        $guestUser = AuthUser::fromArray($guestClaims);
+        if (!$guestUser->isGuest || !str_starts_with($guestUser->id, 'guest_')) {
+            return self::json($response, [
+                'success' => false,
+                'error' => 'Guest token is not a guest session',
+            ], 422);
+        }
+
+        $movedGames = self::repository()->moveGuestGamesToUser($guestUser->id, $authUser);
+        if ($movedGames < 1) {
+            return self::json($response, [
+                'success' => false,
+                'error' => 'Guest session has no games to link',
+            ], 404);
+        }
+
+        return self::json($response, [
             'success' => true,
             'data' => [
                 'linked' => true,
-                'guest_user_id' => $guestUserId,
-                'user' => self::serializeUser($authUser),
+                'moved_games' => $movedGames,
+                'user' => $authUser->toArray(),
             ],
-        ]));
-
-        return $response->withHeader('Content-Type', 'application/json');
+        ]);
     }
 
-    private static function serializeUser(array $authUser): array
+    private static function repository(): GameRepository
     {
-        return [
-            'id' => (string) $authUser['id'],
-            'email' => $authUser['email'] ?? null,
-            'username' => $authUser['username'] ?? null,
-            'display_name' => $authUser['display_name'] ?? ($authUser['username'] ?? null),
-            'role' => $authUser['role'] ?? 'user',
-            'roles' => $authUser['roles'] ?? [],
-            'auth_type' => $authUser['auth_type'] ?? 'frontpage',
-            'is_guest' => (bool) ($authUser['is_guest'] ?? false),
-        ];
+        return new GameRepository(Database::getConnection());
+    }
+
+    /**
+     * @param array<string, mixed> $payload
+     */
+    private static function json(Response $response, array $payload, int $status = 200): Response
+    {
+        $response->getBody()->write(json_encode($payload));
+        return $response
+            ->withHeader('Content-Type', 'application/json')
+            ->withStatus($status);
     }
 }

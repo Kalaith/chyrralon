@@ -13,6 +13,14 @@ import {
 } from './stores/authStore';
 import './App.css';
 
+const configuredLoginUrl = import.meta.env.VITE_WEB_HATCHERY_LOGIN_URL as string | undefined;
+
+if (!configuredLoginUrl || configuredLoginUrl.trim().length === 0) {
+  throw new Error('VITE_WEB_HATCHERY_LOGIN_URL is required');
+}
+
+const webHatcheryLoginUrl = configuredLoginUrl.trim();
+
 function App() {
   const dispatch = useDispatch();
   const { user, authMode, loginUrl, setLoginUrl, login, logout } = useAuthStore();
@@ -22,21 +30,13 @@ function App() {
   const [isStartingGuest, setIsStartingGuest] = useState(false);
 
   const resolvedLoginUrl = useMemo(() => {
-    const baseLoginUrl =
-      loginUrl ||
-      import.meta.env.VITE_WEB_HATCHERY_LOGIN_URL ||
-      import.meta.env.VITE_LOGIN_URL ||
-      '';
-
-    if (!baseLoginUrl) {
-      return '';
-    }
+    const baseLoginUrl = loginUrl ?? webHatcheryLoginUrl;
 
     const url = new URL(baseLoginUrl, window.location.origin);
     url.searchParams.set('return_to', window.location.href);
 
     if (user?.is_guest && user.id) {
-      url.searchParams.set('guest_user_id', user.id);
+      url.searchParams.set('link_guest', '1');
     }
 
     return url.toString();
@@ -46,14 +46,14 @@ function App() {
     const bootstrapAuth = async () => {
       try {
         const params = new URLSearchParams(window.location.search);
-        const requestedGuestLink = params.get('guest_user_id');
         const frontpageToken = getFrontpageToken();
+        const guestSession = getStoredGuestSession();
 
-        if (requestedGuestLink && frontpageToken) {
-          const userFromLink = await GameAPI.linkGuestAccount(requestedGuestLink, frontpageToken);
+        if (frontpageToken && guestSession?.token) {
+          const userFromLink = await GameAPI.linkGuestAccount(guestSession.token, frontpageToken);
           clearGuestSession();
           login(userFromLink, frontpageToken, 'frontpage');
-          params.delete('guest_user_id');
+          params.delete('link_guest');
           const nextQuery = params.toString();
           window.history.replaceState({}, document.title, `${window.location.pathname}${nextQuery ? `?${nextQuery}` : ''}${window.location.hash}`);
           setAuthError(null);
@@ -61,7 +61,6 @@ function App() {
           return;
         }
 
-        const guestSession = getStoredGuestSession();
         if (guestSession?.token) {
           const guestUser = await GameAPI.getSession(guestSession.token);
           saveGuestSession({ token: guestSession.token, user: guestUser });

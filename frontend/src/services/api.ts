@@ -1,17 +1,13 @@
 import { GameCard } from '../types/cards';
 import { GameState } from '../types/game';
 import { AuthUser, getActiveAuthToken } from '../stores/authStore';
-
-const configuredApiBase = import.meta.env.VITE_API_URL as string | undefined;
-
-if (!configuredApiBase || configuredApiBase.trim().length === 0) {
-  throw new Error('VITE_API_URL is required');
-}
-
-const apiBase = configuredApiBase.replace(/\/$/, '');
+import { apiClient } from '../api/apiClient';
+import { ApiError } from '../api/types';
+import axios, { AxiosRequestConfig } from 'axios';
 
 interface ApiErrorBody {
   error?: string;
+  message?: string;
 }
 
 const getErrorMessage = (payload: unknown, fallback: string): string => {
@@ -21,118 +17,160 @@ const getErrorMessage = (payload: unknown, fallback: string): string => {
       return error;
     }
   }
+  if (typeof payload === 'object' && payload !== null && 'message' in payload) {
+    const { message } = payload as ApiErrorBody;
+    if (typeof message === 'string' && message.length > 0) {
+      return message;
+    }
+  }
   return fallback;
 };
 
-const withAuth = (headers: Record<string, string> = {}) => {
-  const token = getActiveAuthToken();
-  return token ? { ...headers, Authorization: `Bearer ${token}` } : headers;
-};
-
-interface SessionResponse {
-  success: boolean;
-  data?: {
-    user?: AuthUser;
-    token?: string;
-    linked?: boolean;
-    guest_user_id?: string;
-  };
-  error?: string;
-  login_url?: string;
+interface SessionData {
+  user?: AuthUser;
+  token?: string;
+  linked?: boolean;
+  moved_games?: number;
 }
 
-export class GameAPI {
-  static async getSession(token?: string): Promise<AuthUser> {
-    const response = await fetch(`${apiBase}/auth/session`, {
-      headers: token ? { Authorization: `Bearer ${token}` } : withAuth(),
-    });
-    const data = (await response.json()) as SessionResponse;
+interface LoginInfoResponse {
+  login_url: string;
+}
 
-    if (!response.ok || !data.data?.user) {
-      throw new Error(getErrorMessage(data, 'Failed to load session'));
+interface CardsResponse {
+  cards?: GameCard[];
+}
+
+type ApiPayload<T> = T | { success?: boolean; data?: T; error?: string; message?: string };
+
+const unwrap = <T>(payload: ApiPayload<T>, fallback: string): T => {
+  if (typeof payload === 'object' && payload !== null && 'success' in payload) {
+    const response = payload as { success?: boolean; data?: T; error?: string; message?: string };
+    if (response.success === false) {
+      throw new ApiError(response.error || response.message || fallback);
+    }
+    if (response.data !== undefined) {
+      return response.data;
+    }
+  }
+
+  return payload as T;
+};
+
+const request = async <T>(config: AxiosRequestConfig, fallback: string): Promise<T> => {
+  try {
+    const response = await apiClient.request<ApiPayload<T>>(config);
+    return unwrap<T>(response.data, fallback);
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error)) {
+      const status = error.response?.status ?? 500;
+      throw new ApiError(getErrorMessage(error.response?.data, fallback), status);
     }
 
-    return data.data.user;
+    throw error;
+  }
+};
+
+const authHeaders = (token?: string): Record<string, string> => {
+  const activeToken = token ?? getActiveAuthToken();
+  return activeToken ? { Authorization: `Bearer ${activeToken}` } : {};
+};
+
+export class GameAPI {
+  static async getLoginInfo(): Promise<LoginInfoResponse> {
+    return request<LoginInfoResponse>(
+      {
+        method: 'GET',
+        url: '/auth/login-info',
+      },
+      'Failed to load login info'
+    );
+  }
+
+  static async getSession(token?: string): Promise<AuthUser> {
+    const data = await request<SessionData>(
+      {
+        method: 'GET',
+        url: '/auth/session',
+        headers: authHeaders(token),
+      },
+      'Failed to load session'
+    );
+
+    if (!data.user) {
+      throw new ApiError(getErrorMessage(data, 'Failed to load session'));
+    }
+
+    return data.user;
   }
 
   static async createGuestSession(): Promise<{ user: AuthUser; token: string }> {
-    const response = await fetch(`${apiBase}/auth/guest-session`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const data = await request<SessionData>(
+      {
+        method: 'POST',
+        url: '/auth/guest-session',
       },
-    });
-    const data = (await response.json()) as SessionResponse;
+      'Failed to create guest session'
+    );
 
-    if (!response.ok || !data.data?.user || !data.data?.token) {
-      throw new Error(getErrorMessage(data, 'Failed to create guest session'));
+    if (!data.user || !data.token) {
+      throw new ApiError(getErrorMessage(data, 'Failed to create guest session'));
     }
 
     return {
-      user: data.data.user,
-      token: data.data.token,
+      user: data.user,
+      token: data.token,
     };
   }
 
-  static async linkGuestAccount(guestUserId: string, token: string): Promise<AuthUser> {
-    const response = await fetch(`${apiBase}/auth/link-guest`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
+  static async linkGuestAccount(guestToken: string, token: string): Promise<AuthUser> {
+    const data = await request<SessionData>(
+      {
+        method: 'POST',
+        url: '/auth/link-guest',
+        headers: authHeaders(token),
+        data: {
+          guest_token: guestToken,
+        },
       },
-      body: JSON.stringify({
-        guest_user_id: guestUserId,
-      }),
-    });
-    const data = (await response.json()) as SessionResponse;
+      'Failed to link guest account'
+    );
 
-    if (!response.ok || !data.data?.user) {
-      throw new Error(getErrorMessage(data, 'Failed to link guest account'));
+    if (!data.user) {
+      throw new ApiError(getErrorMessage(data, 'Failed to link guest account'));
     }
 
-    return data.data.user;
+    return data.user;
   }
 
   static async createGame(): Promise<GameState> {
-    const response = await fetch(`${apiBase}/game/create`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...withAuth(),
+    return request<GameState>(
+      {
+        method: 'POST',
+        url: '/game/create',
       },
-    });
-    const data = (await response.json()) as unknown;
-    if (!response.ok) {
-      throw new Error(getErrorMessage(data, 'Failed to create game'));
-    }
-    return data as GameState;
+      'Failed to create game'
+    );
   }
 
   static async getGame(gameId: string): Promise<GameState> {
-    const response = await fetch(`${apiBase}/game/${gameId}`, {
-      headers: withAuth(),
-    });
-    const data = (await response.json()) as unknown;
-    if (!response.ok) {
-      throw new Error(getErrorMessage(data, 'Failed to get game'));
-    }
-    return data as GameState;
+    return request<GameState>(
+      {
+        method: 'GET',
+        url: `/game/${gameId}`,
+      },
+      'Failed to get game'
+    );
   }
 
   static async processPhase(gameId: string): Promise<GameState> {
-    const response = await fetch(`${apiBase}/game/${gameId}/phase`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...withAuth(),
+    return request<GameState>(
+      {
+        method: 'POST',
+        url: `/game/${gameId}/phase`,
       },
-    });
-    const data = (await response.json()) as unknown;
-    if (!response.ok) {
-      throw new Error(getErrorMessage(data, 'Failed to process phase'));
-    }
-    return data as GameState;
+      'Failed to process phase'
+    );
   }
 
   static async summonCreature(
@@ -143,19 +181,14 @@ export class GameAPI {
       position: { x: number; y: number };
     }
   ): Promise<GameState> {
-    const response = await fetch(`${apiBase}/game/${gameId}/summon`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...withAuth(),
+    return request<GameState>(
+      {
+        method: 'POST',
+        url: `/game/${gameId}/summon`,
+        data,
       },
-      body: JSON.stringify(data),
-    });
-    const result = (await response.json()) as unknown;
-    if (!response.ok) {
-      throw new Error(getErrorMessage(result, 'Failed to summon creature'));
-    }
-    return result as GameState;
+      'Failed to summon creature'
+    );
   }
 
   static async applyMutation(
@@ -166,25 +199,24 @@ export class GameAPI {
       mutationCardId: string;
     }
   ): Promise<GameState> {
-    const response = await fetch(`${apiBase}/game/${gameId}/mutate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...withAuth(),
+    return request<GameState>(
+      {
+        method: 'POST',
+        url: `/game/${gameId}/mutate`,
+        data,
       },
-      body: JSON.stringify(data),
-    });
-    const result = (await response.json()) as unknown;
-    if (!response.ok) {
-      throw new Error(getErrorMessage(result, 'Failed to apply mutation'));
-    }
-    return result as GameState;
+      'Failed to apply mutation'
+    );
   }
 
   static async getCards(): Promise<GameCard[]> {
-    const response = await fetch(`${apiBase}/cards`, {
-      headers: withAuth(),
-    });
-    return (await response.json()) as GameCard[];
+    const data = await request<GameCard[] | CardsResponse>(
+      {
+        method: 'GET',
+        url: '/cards',
+      },
+      'Failed to load cards'
+    );
+    return Array.isArray(data) ? data : (data.cards ?? []);
   }
 }

@@ -3,12 +3,20 @@
     "description": "Chyrralon CCG Backend API",
     "type": "project",
     "require": {
-        "php": "^8.0",
+        "php": "^8.1",
+        "ext-pdo": "*",
         "firebase/php-jwt": "^6.10"
     },
     "autoload": {
         "psr-4": {
             "Chyrralon\\": "src/"
         }
+    },
+    "scripts": {
+        "start": "php -S localhost:8000 -t public",
+        "migrate": "php scripts/migrate.php",
+        "test": "php tests/run.php",
+        "cs-check": "php scripts/check_syntax.php",
+        "cs-fix": "php scripts/check_syntax.php"
     }
 }

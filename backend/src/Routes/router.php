@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use Chyrralon\Core\Router;
 use Chyrralon\Controllers\AuthController;
 use Chyrralon\Controllers\GameController;
@@ -11,6 +13,7 @@ return function (Router $router): void {
     $api = '/api';
 
     // Auth endpoints
+    $router->get($api . '/auth/login-info', [AuthController::class, 'loginInfo']);
     $router->get($api . '/auth/session', [AuthController::class, 'session'], [WebHatcheryJwtMiddleware::class]);
     $router->post($api . '/auth/guest-session', [AuthController::class, 'guestSession']);
     $router->post($api . '/auth/link-guest', [AuthController::class, 'linkGuest'], [WebHatcheryJwtMiddleware::class]);

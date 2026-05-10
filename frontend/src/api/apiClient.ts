@@ -1,72 +1,55 @@
 import axios from 'axios';
-import { getActiveAuthToken, WEBHATCHERY_AUTH_STORAGE_KEY } from '../stores/authStore';
+import { getActiveAuthToken, useAuthStore } from '../stores/authStore';
 
-// Determine the base URL from the environment or use a relative path
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+const configuredApiBase = import.meta.env.VITE_API_URL as string | undefined;
+const configuredLoginUrl = import.meta.env.VITE_WEB_HATCHERY_LOGIN_URL as string | undefined;
+
+if (!configuredApiBase || configuredApiBase.trim().length === 0) {
+  throw new Error('VITE_API_URL is required');
+}
+
+if (!configuredLoginUrl || configuredLoginUrl.trim().length === 0) {
+  throw new Error('VITE_WEB_HATCHERY_LOGIN_URL is required');
+}
+
+const apiBase = configuredApiBase.trim().replace(/\/$/, '');
 
 /**
  * Standardized Web Hatchery Axios Instance
- * Automatically handles Bearer tokens and 401 Unauthorized redirects.
+ * Automatically handles Bearer tokens and 401 Unauthorized login prompts.
  */
 export const apiClient = axios.create({
-    baseURL: BASE_URL,
-    headers: {
-        'Content-Type': 'application/json',
-    },
+  baseURL: apiBase,
+  headers: {
+    'Content-Type': 'application/json',
+  },
 });
 
 // Request Interceptor: Attach Auth Token
 apiClient.interceptors.request.use(
-    (config) => {
-        // We intentionally interact directly with localStorage here to avoid
-        // reactivity issues or circular dependencies when initializing Axios outside of React.
-        try {
-            const token = getActiveAuthToken();
-            if (token) {
-                config.headers.Authorization = `Bearer ${token}`;
-            }
-        } catch (error) {
-            console.warn('Failed to parse auth token from local storage', error);
-        }
-
-        return config;
-    },
-    (error) => {
-        return Promise.reject(error);
+  config => {
+    const token = getActiveAuthToken();
+    const hasAuthorization = Boolean(config.headers.Authorization || config.headers.authorization);
+    if (token && !hasAuthorization) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
+
+    return config;
+  },
+  error => Promise.reject(error)
 );
 
 // Response Interceptor: Handle 401s and standardize errors
 apiClient.interceptors.response.use(
-    (response) => {
-        return response;
-    },
-    (error) => {
-        // Intercept 401 Unauthorized and redirect to central login
-        if (error.response?.status === 401) {
-            const loginUrl =
-                error.response?.data?.login_url ||
-                import.meta.env.VITE_WEB_HATCHERY_LOGIN_URL;
-
-            if (loginUrl) {
-                try {
-                    const raw = localStorage.getItem(WEBHATCHERY_AUTH_STORAGE_KEY);
-                    const parsed = raw ? JSON.parse(raw) : {};
-                    const state = parsed?.state ?? {};
-                    const next = {
-                        ...parsed,
-                        state: {
-                            ...state,
-                            loginUrl,
-                        },
-                    };
-                    localStorage.setItem(WEBHATCHERY_AUTH_STORAGE_KEY, JSON.stringify(next));
-                    window.dispatchEvent(new CustomEvent('webhatchery:login-required', { detail: { loginUrl } }));
-                } catch (storageError) {
-                    console.warn('Failed to persist login URL to auth storage', storageError);
-                }
-            }
-        }
-        return Promise.reject(error);
+  response => response,
+  error => {
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      const payload = error.response.data as { login_url?: string } | undefined;
+      const loginUrl = payload?.login_url || configuredLoginUrl.trim();
+      useAuthStore.getState().setLoginUrl(loginUrl);
+      window.dispatchEvent(new CustomEvent('webhatchery:login-required', { detail: { loginUrl } }));
     }
+
+    return Promise.reject(error);
+  }
 );

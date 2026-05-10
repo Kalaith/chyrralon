@@ -15,8 +15,8 @@ class GameEngine
     private static ?GameEngine $instance = null;
     private array $gameStates = [];
 
-    private function __construct() {
-        $this->loadGameStates();
+    private function __construct()
+    {
     }
 
     public static function getInstance(): GameEngine
@@ -232,99 +232,48 @@ class GameEngine
         return $game;
     }
 
-    private function getStorageDir(): string
-    {
-        $storageDir = __DIR__ . '/../../storage/games';
-        if (!is_dir($storageDir)) {
-            mkdir($storageDir, 0755, true);
-        }
-        return $storageDir;
-    }
-
-    private function getGameFilePath(string $gameId): string
-    {
-        return $this->getStorageDir() . '/' . $gameId . '.json';
-    }
-
-    private function saveGameState(string $gameId): void
-    {
-        if (isset($this->gameStates[$gameId])) {
-            $filePath = $this->getGameFilePath($gameId);
-            file_put_contents($filePath, json_encode($this->gameStates[$gameId], JSON_PRETTY_PRINT));
-        }
-    }
-
-    private function loadGameState(string $gameId): ?array
-    {
-        $filePath = $this->getGameFilePath($gameId);
-        if (file_exists($filePath)) {
-            $content = file_get_contents($filePath);
-            $gameState = json_decode($content, true);
-            if ($gameState) {
-                $this->gameStates[$gameId] = $gameState;
-                return $gameState;
-            }
-        }
-        return null;
-    }
-
-    private function loadGameStates(): void
-    {
-        $storageDir = $this->getStorageDir();
-        $files = glob($storageDir . '/*.json');
-        foreach ($files as $file) {
-            $gameId = basename($file, '.json');
-            $this->loadGameState($gameId);
-        }
-    }
-
     public function getGame(string $gameId): ?array
     {
-        // Try to load from memory first, then from disk
-        if (!isset($this->gameStates[$gameId])) {
-            $this->loadGameState($gameId);
-        }
         return $this->gameStates[$gameId] ?? null;
     }
 
-    // Override methods to save state after modifications
-    public function createGame(string $gameId): array
+    /**
+     * @param array<string, mixed> $gameState
+     */
+    public function setGameState(string $gameId, array $gameState): void
     {
-        $gameState = $this->createGameInternal($gameId);
-        $this->saveGameState($gameId);
-        return $gameState;
+        $this->gameStates[$gameId] = $gameState;
+    }
+
+    public function createGame(string $gameId, string $ownerName = 'Player 1'): array
+    {
+        return $this->createGameInternal($gameId, $ownerName);
     }
 
     public function processPhase(string $gameId): array
     {
-        $gameState = $this->processPhaseInternal($gameId);
-        $this->saveGameState($gameId);
-        return $gameState;
+        return $this->processPhaseInternal($gameId);
     }
 
     public function summonCreature(string $gameId, string $playerId, string $cardId, array $position): array
     {
-        $gameState = $this->summonCreatureInternal($gameId, $playerId, $cardId, $position);
-        $this->saveGameState($gameId);
-        return $gameState;
+        return $this->summonCreatureInternal($gameId, $playerId, $cardId, $position);
     }
 
     public function applyMutation(string $gameId, string $playerId, string $creatureId, string $mutationCardId): array
     {
-        $gameState = $this->applyMutationInternal($gameId, $playerId, $creatureId, $mutationCardId);
-        $this->saveGameState($gameId);
-        return $gameState;
+        return $this->applyMutationInternal($gameId, $playerId, $creatureId, $mutationCardId);
     }
 
     // Rename original methods to internal versions
-    private function createGameInternal(string $gameId): array
+    private function createGameInternal(string $gameId, string $ownerName): array
     {
         $this->gameStates[$gameId] = [
             'id' => $gameId,
             'players' => [
                 [
                     'id' => 'player1',
-                    'name' => 'Player 1',
+                    'name' => $ownerName,
                     'health' => 20,
                     'dnaPoints' => 3,
                     'energy' => 3,
@@ -358,10 +307,7 @@ class GameEngine
     private function processPhaseInternal(string $gameId): array
     {
         if (!isset($this->gameStates[$gameId])) {
-            // Try to load from disk
-            if (!$this->loadGameState($gameId)) {
-                throw new \Exception('Game not found');
-            }
+            throw new \Exception('Game not found');
         }
 
         $game = &$this->gameStates[$gameId];
@@ -395,9 +341,7 @@ class GameEngine
     private function summonCreatureInternal(string $gameId, string $playerId, string $cardId, array $position): array
     {
         if (!isset($this->gameStates[$gameId])) {
-            if (!$this->loadGameState($gameId)) {
-                throw new \Exception('Game not found');
-            }
+            throw new \Exception('Game not found');
         }
 
         $game = &$this->gameStates[$gameId];
@@ -483,9 +427,7 @@ class GameEngine
     private function applyMutationInternal(string $gameId, string $playerId, string $creatureId, string $mutationCardId): array
     {
         if (!isset($this->gameStates[$gameId])) {
-            if (!$this->loadGameState($gameId)) {
-                throw new \Exception('Game not found');
-            }
+            throw new \Exception('Game not found');
         }
 
         $game = &$this->gameStates[$gameId];

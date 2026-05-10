@@ -1,5 +1,8 @@
 <?php
 
+declare(strict_types=1);
+
+
 namespace Chyrralon\Controllers;
 
 use Chyrralon\Http\Response;
@@ -9,7 +12,10 @@ class HealthController
 {
     public static function health(Request $request, Response $response): Response
     {
-        $data = ['status' => 'ok', 'message' => 'Chyrralon API is running'];
+        $data = [
+            'success' => true,
+            'data' => ['status' => 'ok', 'message' => 'Chyrralon API is running'],
+        ];
         $response->getBody()->write(json_encode($data));
         return $response->withHeader('Content-Type', 'application/json');
     }
